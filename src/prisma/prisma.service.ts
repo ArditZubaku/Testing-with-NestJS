@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -25,10 +25,28 @@ export class PrismaService
     await this.$disconnect();
   }
 
-  async cleanDatabase() {
+  async cleanDatabase(): Promise<void> {
     if (process.env.NODE_ENV === 'production') return;
-    const models = Reflect.ownKeys(this).filter((key) => key[0] !== '_');
 
-    return Promise.all(models.map((modelKey) => this[modelKey].deleteMany()));
+    const models = Prisma.dmmf.datamodel.models.map((model) =>
+      this.toCamelCase(model.name),
+    );
+
+    try {
+      models.forEach(async (model) => await this[model].deleteMany());
+    } catch (error) {
+      console.error('Error in cleanDatabase:', error);
+    }
+  }
+
+  private toCamelCase(input: string): string {
+    const words = input.match(/[A-Z][a-z]+|[a-z]+/g) || [];
+    return words
+      .map((word: string, index: number) =>
+        index === 0
+          ? word.toLowerCase()
+          : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+      )
+      .join('');
   }
 }

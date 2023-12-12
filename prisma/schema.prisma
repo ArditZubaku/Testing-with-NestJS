@@ -22,7 +22,7 @@ model User {
   // RELATIONS
   todos Todo[]
 
-  @@map("users")
+  // @@map("users")
 }
 
 model Todo {
@@ -38,7 +38,7 @@ model Todo {
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("todos")
+  // @@map("todos")
 }
 
 enum TodoStatus {
